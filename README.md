@@ -4,6 +4,8 @@
 
 ### 目录结构
 
+
+<pre>
 dist
 src
 ├── lib
@@ -19,7 +21,8 @@ src
     ├── image.html
     ├── md-viewer.html
     └── reveal.html
-    
+</pre>
+  
     
 - lib 开源的公共库文件
 - static 存放静态的资源文件如图片、公共的css
