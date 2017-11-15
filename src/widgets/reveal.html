@@ -1,0 +1,170 @@
+<template id="image-widget-tpl">
+    <link rel="stylesheet" href="//static.freelog.com/web-components/static/css/reset.css">
+    <link rel="stylesheet" href="../lib/reveal/css/reveal.css">
+    <link rel="stylesheet" href="../lib/reveal/css/theme/black.css" id="theme">
+    <style>
+        .reveal {
+            background-color: #222 !important;
+        }
+
+        .reveal-content .reveal .controls,
+        .reveal-content .reveal .progress {
+            position: absolute;
+        }
+
+        .wrapper {
+            width: 100%;
+            height: 100%;
+        }
+
+        .reveal-content {
+            width: 80%;
+            height: 100%;
+            float: left;
+        }
+
+        .menu {
+            padding: 12px 9px;
+            box-sizing: border-box;
+            width: 20%;
+            float: left;
+        }
+
+        .menu li {
+            cursor: pointer;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+    </style>
+    <div class="wrapper">
+        <ul class="menu js-menu"></ul>
+        <div class="reveal-content js-reveal-content"></div>
+    </div>
+    <script src="../lib/reveal/reveal.js" class="js-lib-js"></script>
+</template>
+
+<script>
+    ;(function () {
+        var template = document.currentScript.parentNode.querySelector('template');
+
+        class RevealWidget extends HTMLElement {
+            constructor() {
+                super()
+                let self = this;
+                let shadowRoot = self.attachShadow({mode: 'closed'});
+                const instance = template.content.cloneNode(true);
+
+                self.root = shadowRoot
+                self.initStyle()
+                shadowRoot.appendChild(instance)
+
+                self.$content = shadowRoot.querySelector('.js-reveal-content')
+
+                self.loadData()
+                    .then(function (reveals) {
+                        self.renderMenu(reveals)
+                        self.$menuItems = shadowRoot.querySelectorAll('.js-menu-item')
+                        self.bindEvent(reveals)
+                        self.$menuItems[0].click()
+                    })
+            }
+
+            renderMenu(reveals) {
+                var html = '';
+                var self = this;
+                //资源名称为title
+                reveals.forEach(function (reveal, index) {
+                    var presentable = self.presentableList[index]
+                    var name = presentable.tagInfo.resourceInfo.resourceName
+                    html += `<li class="js-menu-item" data-index="${index}" title="${name}">${name} ></li>`
+                })
+
+                this.root.querySelector('.js-menu').innerHTML = html
+            }
+
+            initStyle() {
+                var styleObj = getComputedStyle(this);
+                if (isNaN(parseInt(styleObj.width))) {
+                    var DefaultStyle = {
+                        width: '1000px',
+                        height: '500px',
+                        display: 'block'
+                    };
+
+                    this.style = this.obj2styleString(DefaultStyle);
+                }
+            }
+
+            loadData() {
+                var self = this;
+                return window.QI.fetch(`/v1/presentables?nodeId=${window.__page_build_config.nodeId}&resourceType=reveal_slide`).then(function (res) {
+                    return res.json()
+                }).then(function (data) {
+                    self.presentableList = data.data;
+                    var promises = data.data.map(function (resource) {
+                        return window.QI.fetchPresentable(resource.presentableId + '.data')
+                            .then(function (response) {
+                                return response.text()
+                            })
+                    });
+
+                    return Promise.all(promises)
+                })
+            }
+
+            bindEvent(reveals) {
+                var self = this;
+
+                for (var i = 0; i < this.$menuItems.length; i++) {
+                    this.$menuItems[i].addEventListener('click', function (ev) {
+                        var index = parseInt(ev.target.dataset.index)
+                        self.content = reveals[index]
+                    })
+                }
+            }
+
+            obj2styleString(styles) {
+                return Object.entries(styles).reduce((styleString, entry) => (
+                    styleString + entry[0] + ':' + entry[1] + ';'
+                ), '');
+            }
+
+            renderReveal() {
+                if (typeof initReveal === 'undefined') {
+                    return
+                }
+                initReveal(this.root)
+
+                Reveal.initialize({
+                    controls: true,
+                    progress: true,
+                    history: false,
+                    center: true,
+                });
+            }
+
+            static get observedAttributes() {
+                return ['content'];
+            }
+
+            //直接赋值
+            set content(value) {
+                this.$content.innerHTML = value;
+                this.renderReveal()
+            }
+
+            get content() {
+                return this.$content.innerHTML
+            }
+
+            //setAttribute or dom init
+            attributeChangedCallback(attrName, oldVal, newVal) {
+                this[attrName] = newVal
+            }
+        }
+
+        customElements.define('freelog-demo-reveal', RevealWidget);
+    })();
+</script>
