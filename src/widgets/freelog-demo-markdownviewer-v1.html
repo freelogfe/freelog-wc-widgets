@@ -1,0 +1,165 @@
+<template>
+    <link rel="stylesheet" href="//static.freelog.com/web-components/static/css/reset.css">
+
+    <style>
+        .wrapper {
+            width: 100%;
+            height: 100%;
+        }
+
+        .markdown-content {
+            margin-left: 200px;
+            height: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .menu {
+            box-sizing: border-box;
+            width: 200px;
+            float: left;
+            background: #333;
+            border-right: 1px solid #404040;
+            color: #ddd;
+            height: 100%;
+            overflow: auto;
+            position: fixed;
+            top: 0;
+        }
+
+        .menu-title {
+            padding: 15px 15px 0px 15px;
+            border-bottom: 1px solid;
+            margin-bottom: 6px;
+        }
+
+        .menu li {
+            cursor: pointer;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #bbb;
+            padding-left: 15px;
+            height: 30px;
+            line-height: 30px;
+        }
+
+        .menu li:hover {
+            background-color: #404040;
+        }
+
+        .menu .serial {
+            padding-right: 6px;
+        }
+    </style>
+    <div class="wrapper js-wrapper">
+        <div class="menu">
+            <h3 class="menu-title">MARKDOWNS</h3>
+            <ul class="js-menu"></ul>
+        </div>
+        <div class="markdown-content js-markdown-content"></div>
+    </div>
+</template>
+
+
+<script src="../lib/marked.js"></script>
+<script>
+    (function () {
+        var template = document.currentScript.parentNode.querySelector('template');
+
+        class DemoMarkdownViewer extends HTMLElement {
+            constructor() {
+                super()
+                let self = this;
+                let shadowRoot = self.attachShadow({mode: 'closed'});
+                const instance = template.content.cloneNode(true);
+
+                self.root = shadowRoot
+                shadowRoot.appendChild(instance)
+                self.$viewer = shadowRoot.querySelector('.js-markdown-content')
+                self.loadData()
+                    .then(function (markdowns) {
+                        self.markdowns = markdowns
+                        self.renderMenu(markdowns)
+                        self.$menuItems = shadowRoot.querySelectorAll('.js-menu-item')
+                        self.bindEvent(markdowns)
+                        if (self.$menuItems.length) {
+                            self.$menuItems[0].click()
+                        }
+                    })
+            }
+
+            loadData() {
+                var self = this;
+                return window.QI.fetch(`/v1/presentables?nodeId=${window.__page_build_config.nodeId}&resourceType=markdown`).then(function (res) {
+                    return res.json()
+                }).then(function (data) {
+                    self.presentableList = data.data;
+                    var promises = data.data.map(function (resource) {
+                        return window.QI.fetchPresentable(resource.presentableId + '.data')
+                            .then(function (response) {
+                                return response.text()
+                            })
+                    });
+
+                    return Promise.all(promises)
+                })
+            }
+
+
+            renderMenu(markdowns) {
+                var html = '';
+                var self = this;
+                //资源名称为title
+                markdowns.forEach(function (reveal, index) {
+                    var presentable = self.presentableList[index]
+                    var name = presentable.tagInfo.resourceInfo.resourceName
+                    html += `<li class="js-menu-item" data-index="${index}" title="${name}"><span class="serial">${index + 1}</span> ${name}</li>`
+                })
+
+                this.root.querySelector('.js-menu').innerHTML = html
+            }
+
+            showMarkdownContent(index) {
+                var value = this.markdowns[index]
+                this.$viewer.innerHTML = marked(value)
+            }
+
+            bindEvent() {
+                var self = this;
+
+                self.root.addEventListener('click', function (ev) {
+                    var target = ev.target;
+                    if (target.classList.contains('js-menu-item')) {
+                        self.showMarkdownContent(target.dataset.index)
+                    } else {
+
+                    }
+                }, false)
+            }
+
+            static get observedAttributes() {
+                return ['content'];
+            }
+
+            //直接赋值
+            set content(value) {
+                this.$content.innerHTML = value;
+                this.renderReveal()
+            }
+
+            get content() {
+                return this.$content.innerHTML
+            }
+
+            //setAttribute or dom init
+            attributeChangedCallback(attrName, oldVal, newVal) {
+                this[attrName] = newVal
+            }
+        }
+
+//        freelog-demo-markdownviewer
+        customElements.define('freelog-abcd-mdviewer66', DemoMarkdownViewer);
+    })();
+
+</script>

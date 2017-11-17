@@ -3,22 +3,24 @@
 var gulp = require('gulp');
 var inline = require('gulp-inline');
 var uglify = require('gulp-uglify');
-var minifyCss = require('gulp-minify-css');
-var autoprefixer = require('gulp-autoprefixer');
 var htmlmin = require('gulp-htmlmin');
 var del = require('del')
-var cleanCSS = require('gulp-clean-css');
-
+var runSequence = require('run-sequence');
+var newer = require('gulp-newer');
+const minify = require("gulp-babel-minify");
+var isBuild = true
+var dest = 'dist'
 gulp.task('clean', function () {
-    return del(['dist'])
+    return del([dest])
 })
 
-gulp.task('pack-html', ['clean'], function () {
-    return gulp.src(['./src/widgets/**/*.html'])
+gulp.task('pack-html', function () {
+    return gulp.src(['!src/lib/**/*', 'src/**/*.html'])
+        // .pipe(newer(dest))
         .pipe(inline({
             js: function () {
                 return uglify({
-                    mangle: true
+                    mangle: isBuild
                 });
             },
             // css: [autoprefixer({browsers: ['last 2 versions']})],
@@ -26,17 +28,24 @@ gulp.task('pack-html', ['clean'], function () {
             ignore: []
         }))
         .pipe(htmlmin({
-            collapseWhitespace: true,
-            minifyJS: true,
-            minifyCSS: true
+            collapseWhitespace: isBuild,
+            minifyJS: isBuild,
+            minifyCSS: isBuild
         }))
-        .pipe(gulp.dest('dist/'));
+        .pipe(gulp.dest(dest));
 });
 
+gulp.task('build', function (done) {
+    runSequence('clean',
+        ['pack-html'],
+        done)
+})
 
-gulp.task('default', ['clean', 'pack-html'])
+
+gulp.task('default', ['build'])
 
 
 gulp.task('watch', function () {
-    gulp.watch(['./src/**/*'], 'pack-html')
+    isBuild = false
+    gulp.watch(['./src/**/*'], ['build'])
 })

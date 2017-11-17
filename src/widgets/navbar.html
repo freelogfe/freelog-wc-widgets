@@ -1,0 +1,177 @@
+<template>
+    <link rel="stylesheet" href="//static.freelog.com/web-components/static/css/reset.css">
+    <style>
+        .wrapper:hover {
+            opacity: 1;
+        }
+
+        .wrapper {
+            padding: 20px;
+            text-align: center;
+            background-color: #3d4349;
+            height: 100%;
+            color: white;
+            font-size: 16px;
+            opacity: 0.5;
+            transition: all .2s ease-in;
+        }
+
+        .title,
+        .desc {
+            margin-top: 12px;
+        }
+
+        .title {
+            font-size: 30px;
+            font-weight: 300;
+        }
+
+        .desc {
+            color: #999;
+        }
+
+        .avatar {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+        }
+
+        .nav-item span {
+            padding: 0 6px;
+            cursor: pointer;
+        }
+
+        .nav-item span:hover {
+            color: #999;
+            border-radius: 5px;
+            box-shadow: 0 7px 8px -4px rgba(0, 0, 0, 0.2), 0 12px 17px 2px rgba(0, 0, 0, 0.14), 0 5px 22px 4px rgba(0, 0, 0, 0.12);
+        }
+
+        .nav-menu {
+            margin: 15px 0;
+        }
+    </style>
+
+    <div class="wrapper js-wrapper">
+        <header>
+            <div><img class="avatar js-avatar" alt=""></div>
+            <div class="title js-title"></div>
+            <div class="desc js-subtitle"></div>
+        </header>
+
+        <ul class="nav-menu js-nav-menu">
+        </ul>
+    </div>
+</template>
+
+<script>
+    ;(function () {
+        var template = document.currentScript.parentNode.querySelector('template');
+
+        class NavbarWidget extends HTMLElement {
+            constructor() {
+                super()
+                let self = this;
+                let shadowRoot = self.attachShadow({mode: 'closed'});
+                const instance = template.content.cloneNode(true);
+
+                self.root = shadowRoot
+                shadowRoot.appendChild(instance)
+                this.loadData().then(function (data) {
+                    var config;
+                    try {
+                        config = JSON.parse(data)
+                    } catch (err) {
+                        console.log(err)
+                        config = {}
+                    }
+
+                    self.blogConfig = config
+                    var widgetNames = Object.keys(config.navMap)
+
+                    self.getWidgets(widgetNames)
+                    self.renderNavBar(config)
+                    self.renderNavMenu(config.navMap);
+                    self.bindEvent();
+                    self.initShow(widgetNames)
+                })
+            }
+
+            renderNavBar(config) {
+                this.root.querySelector('.js-avatar').setAttribute('src', config.avatar)
+                this.root.querySelector('.js-title').textContent = config.title
+                this.root.querySelector('.js-subtitle').textContent = config.subTitle;
+            }
+
+            renderNavMenu(navMap) {
+                var html = ''
+                Object.keys(navMap).forEach(function (wn) {
+                    var title = navMap[wn]
+                    html += `<li class="nav-item"><span class="js-nav-item" data-nav="${wn}">${title}</span></li>`
+                })
+                this.root.querySelector('.js-nav-menu').innerHTML = html
+            }
+
+            loadData() {
+                var self = this;
+                return window.QI.fetch(`/v1/presentables?nodeId=${window.__page_build_config.nodeId}&resourceType=meta_json`).then(function (res) {
+                    return res.json()
+                }).then(function (data) {
+                    self.presentableList = data.data;
+                    var promises = data.data.map(function (resource) {
+                        return window.QI.fetchPresentable(resource.presentableId + '.data')
+                            .then(function (response) {
+                                return response.text()
+                            })
+                    });
+
+                    return Promise.all(promises)
+                })
+            }
+
+            initShow(widgetNames) {
+                this.showWidget(widgetNames[1])
+            }
+
+            getWidgets(widgetNames) {
+                var $widgets = document.querySelectorAll('.js-wc-widget');
+                var $widget;
+                var widgetName
+                this.$widgets = {};
+
+                for (var i = 0; i < $widgets.length; i++) {
+                    $widget = $widgets[i]
+                    widgetName = $widget.nodeName.toLowerCase();
+                    if (widgetNames.includes(widgetName)) {
+                        $widget.style.display = 'none';
+                        this.$widgets[widgetName] = $widget;
+                    }
+                }
+
+                return this.$widgets
+            }
+
+            showWidget(name) {
+                var self = this
+                Object.keys(this.$widgets).forEach(function (wn) {
+                    self.$widgets[wn].style.display = (name === wn) ? 'block' : 'none';
+                })
+            }
+
+            bindEvent() {
+                var self = this;
+                var $navs = self.root.querySelectorAll('.js-nav-item')
+
+                for (var i = 0; i < $navs.length; i++) {
+                    $navs[i].addEventListener('click', function (ev) {
+                        var target = ev.currentTarget;
+                        self.showWidget(target.dataset.nav)
+                    }, false)
+                }
+            }
+        }
+
+
+        customElements.define('freelog-demo-navbar', NavbarWidget);
+    })();
+</script>

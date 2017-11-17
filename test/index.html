@@ -1,5 +1,6 @@
-
-<!DOCTYPE html><html><head>
+<!DOCTYPE html>
+<html>
+<head>
     <meta charset="utf-8">
     <title>freelog.com</title>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
@@ -18,24 +19,53 @@
     <link rel="stylesheet" href="http://static.freelog.com/web-components/static/css/reset.css">
     <link rel="import" href="http://static.freelog.com/web-components/lib/QI/index.html">
     <link rel="stylesheet" href="http://static.freelog.com/web-components/app.css">
+    <style>
+        .fullscreen {
+            position: fixed !important;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 999;
+            width: 100% !important;
+            height: 100% !important;
+        }
+    </style>
 </head>
 <body>
 
 <freelog-lib-qi class="js-lib-qi"></freelog-lib-qi>
-<div class="page-container" id="js-page-container">
+
+<div class="page-container" id="js-page-container" style="position: relative">
     <!--page build content-->
+    <freelog-demo-navbar data-widget-src="0edbc1d506b9b7366b5fb22340cd0423c90ed63c" data-widget-config="{}"
+                         class="js-wc-widget" style="width:20%;position: fixed;
+    height: 100%;
+    z-index: 9;"
+                         data-widget-presentable-id="5a0bb70496b30b001f5670eb22"></freelog-demo-navbar>
 
-    <freelog-abcd-mdviewer66 data-widget-src="f66d76e99e6f411e1fe120f6471917490f3cde31" data-widget-config="{}" class="js-wc-widget" style="" data-widget-presentable-id="5a0bb7a24a9fea0020d9ca3b"></freelog-abcd-mdviewer66></div>
-<freelog-demo-reveal data-widget-src="0edbc1d506b9b7366b5fb22340cd0423c90ed63c" data-widget-config="{}" class="js-wc-widget" style="" data-widget-presentable-id="5a0bb70496b30b001f5670eb"></freelog-demo-reveal></div>
+    <freelog-demo-reveal data-widget-src="0edbc1d506b9b7366b5fb22340cd0423c90ed63c" data-widget-config="{}"
+                         class="js-wc-widget" style="position: absolute; width: 80%;height: 600px;right: 0;"
+                         data-widget-presentable-id="5a0bb70496b30b001f5670eb"></freelog-demo-reveal>
 
+    <freelog-demo-markdownviewer data-widget-src="f66d76e99e6f411e1fe120f6471917490f3cde31" data-widget-config="{}"
+                             class="js-wc-widget" style="position: absolute; width: 80%;right: 0;"
+                             data-widget-presentable-id="5a0bb7a24a9fea0020d9ca3b"></freelog-demo-markdownviewer>
+
+</div>
 
 <script>
     window.__page_build_config = {
         nodeId: 10013
     };
     window.QI = document.querySelector('.js-lib-qi');
-</script>
-<!--<script src="http://static.freelog.com/web-components/app.js"></script>-->
-<link rel="import" href="../src/widgets/reveal.html">
+    window.addEventListener('load', function () {
 
-</body></html>
+
+    })
+</script>
+<script src="http://static.freelog.com/web-components/app.js"></script>
+<!--<link rel="import" href="../src/widgets/reveal.html">-->
+
+</body>
+</html>
