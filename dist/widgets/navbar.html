@@ -1,4 +1,71 @@
-<template><link rel="stylesheet" href="//static.freelog.com/web-components/static/css/reset.css"><style>.wrapper:hover{opacity:1}.wrapper{padding:20px;text-align:center;background-color:#3d4349;height:100%;color:#fff;font-size:16px;opacity:.5;transition:all .2s ease-in}.desc,.title{margin-top:12px}.title{font-size:30px;font-weight:300}.desc{color:#999}.avatar{width:160px;height:160px;border-radius:50%}.nav-item span{padding:0 6px;cursor:pointer}.nav-item span:hover{color:#999;border-radius:5px;box-shadow:0 7px 8px -4px rgba(0,0,0,.2),0 12px 17px 2px rgba(0,0,0,.14),0 5px 22px 4px rgba(0,0,0,.12)}.nav-menu{margin:15px 0}</style><div class="wrapper js-wrapper"><header><div><img class="avatar js-avatar" alt=""></div><div class="title js-title"></div><div class="desc js-subtitle"></div></header><ul class="nav-menu js-nav-menu"></ul></div></template><script>;(function () {
+<template>
+    <link rel="stylesheet" href="//static.freelog.com/web-components/static/css/reset.css">
+    <style>
+        .wrapper:hover {
+            opacity: 1;
+        }
+
+        .wrapper {
+            padding: 20px;
+            text-align: center;
+            background-color: #3d4349;
+            height: 100%;
+            color: white;
+            font-size: 16px;
+            opacity: 0.5;
+            transition: all .2s ease-in;
+        }
+
+        .title,
+        .desc {
+            margin-top: 12px;
+        }
+
+        .title {
+            font-size: 30px;
+            font-weight: 300;
+        }
+
+        .desc {
+            color: #999;
+        }
+
+        .avatar {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+        }
+
+        .nav-item span {
+            padding: 0 6px;
+            cursor: pointer;
+        }
+
+        .nav-item span:hover {
+            color: #999;
+            border-radius: 5px;
+            box-shadow: 0 7px 8px -4px rgba(0, 0, 0, 0.2), 0 12px 17px 2px rgba(0, 0, 0, 0.14), 0 5px 22px 4px rgba(0, 0, 0, 0.12);
+        }
+
+        .nav-menu {
+            margin: 15px 0;
+        }
+    </style>
+
+    <div class="wrapper js-wrapper">
+        <header>
+            <div><img class="avatar js-avatar" alt=""></div>
+            <div class="title js-title"></div>
+            <div class="desc js-subtitle"></div>
+        </header>
+
+        <ul class="nav-menu js-nav-menu">
+        </ul>
+    </div>
+</template>
+
+<script>
+    ;(function () {
         var template = document.currentScript.parentNode.querySelector('template');
 
         class NavbarWidget extends HTMLElement {
@@ -19,14 +86,16 @@
                         config = {}
                     }
 
-                    self.blogConfig = config
-                    var widgetNames = Object.keys(config.navMap)
+                    if (config.ret === 0 && config.errcode === 0) {
+                        self.blogConfig = config
+                        var widgetNames = Object.keys(config.navMap)
 
-                    self.getWidgets(widgetNames)
-                    self.renderNavBar(config)
-                    self.renderNavMenu(config.navMap);
-                    self.bindEvent();
-                    self.initShow(widgetNames)
+                        self.getWidgets(widgetNames)
+                        self.renderNavBar(config)
+                        self.renderNavMenu(config.navMap);
+                        self.bindEvent();
+                        self.initShow(widgetNames)
+                    }
                 })
             }
 
@@ -52,7 +121,7 @@
                 }).then(function (data) {
                     self.presentableList = data.data;
                     var promises = data.data.map(function (resource) {
-                        return window.QI.fetchPresentable(resource.presentableId + '.data')
+                        return window.QI.fetchResource(resource.presentableId + '.data')
                             .then(function (response) {
                                 return response.text()
                             })
@@ -106,4 +175,5 @@
 
 
         customElements.define('freelog-demo-navbar', NavbarWidget);
-    })();</script>
+    })();
+</script>

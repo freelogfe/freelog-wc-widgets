@@ -95,6 +95,7 @@
                 shadowRoot.appendChild(instance)
                 self.loadData()
                     .then(function (markdowns) {
+                        console.log('markdown viewer')
                         self.markdowns = markdowns
                         self.markdownHtmls = []
                         markdowns.forEach(function (md) {
@@ -103,6 +104,9 @@
                         self.renderList(markdowns)
                         self.$viewers = shadowRoot.querySelectorAll('.js-article-item .article-content')
                         self.bindEvent(markdowns)
+                    })
+                    .catch(function (er) {
+                        console.log(er)
                     })
             }
 
@@ -113,13 +117,17 @@
                 }).then(function (data) {
                     self.presentableList = data.data;
                     var promises = data.data.map(function (resource) {
-                        return window.QI.fetchPresentable(resource.presentableId + '.data')
+                        return window.QI.fetchResource(resource.presentableId + '.data')
                             .then(function (response) {
                                 return response.text()
                             })
                     });
 
                     return Promise.all(promises)
+                }).then(function (values) {
+                    return values.filter(function (v) {
+                        return v !== null
+                    })
                 })
             }
 
@@ -145,7 +153,6 @@
             showMarkdownContent(index) {
                 this.$viewers[index].style['max-height'] = '5000px'
             }
-
 
             hideMarkdownContent(index) {
                 this.$viewers[index].style['max-height'] = '200px'

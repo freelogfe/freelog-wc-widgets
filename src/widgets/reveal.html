@@ -140,7 +140,7 @@
                 }).then(function (data) {
                     self.presentableList = data.data;
                     var promises = data.data.map(function (resource) {
-                        return window.QI.fetchPresentable(resource.presentableId + '.data')
+                        return window.QI.fetchResource(resource.presentableId + '.data')
                             .then(function (response) {
                                 return response.text()
                             })

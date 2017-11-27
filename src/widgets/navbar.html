@@ -86,14 +86,16 @@
                         config = {}
                     }
 
-                    self.blogConfig = config
-                    var widgetNames = Object.keys(config.navMap)
+                    if (config.ret === 0 && config.errcode === 0) {
+                        self.blogConfig = config
+                        var widgetNames = Object.keys(config.navMap)
 
-                    self.getWidgets(widgetNames)
-                    self.renderNavBar(config)
-                    self.renderNavMenu(config.navMap);
-                    self.bindEvent();
-                    self.initShow(widgetNames)
+                        self.getWidgets(widgetNames)
+                        self.renderNavBar(config)
+                        self.renderNavMenu(config.navMap);
+                        self.bindEvent();
+                        self.initShow(widgetNames)
+                    }
                 })
             }
 
@@ -119,7 +121,7 @@
                 }).then(function (data) {
                     self.presentableList = data.data;
                     var promises = data.data.map(function (resource) {
-                        return window.QI.fetchPresentable(resource.presentableId + '.data')
+                        return window.QI.fetchResource(resource.presentableId + '.data')
                             .then(function (response) {
                                 return response.text()
                             })
