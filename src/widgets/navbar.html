@@ -78,15 +78,8 @@
                 self.root = shadowRoot
                 shadowRoot.appendChild(instance)
                 this.loadData().then(function (data) {
-                    var config;
-                    try {
-                        config = JSON.parse(data)
-                    } catch (err) {
-                        console.log(err)
-                        config = {}
-                    }
-
-                    if (config.ret === 0 && config.errcode === 0) {
+                    var config = data;
+                    if (config && config.ret === 0 && config.errcode === 0) {
                         self.blogConfig = config
                         var widgetNames = Object.keys(config.navMap)
 
@@ -119,15 +112,29 @@
                 return window.QI.fetch(`/v1/presentables?nodeId=${window.__auth_info__.__auth_node_id__}&resourceType=meta_json`).then(function (res) {
                     return res.json()
                 }).then(function (data) {
-                    self.presentableList = data.data;
-                    var promises = data.data.map(function (resource) {
+                    self.presentableList = data.data || [];
+                    var promises = self.presentableList.map(function (resource) {
                         return window.QI.fetchResource(resource.presentableId + '.data')
                             .then(function (response) {
-                                return response.text()
+                                return response.json()
                             })
                     });
 
                     return Promise.all(promises)
+                }).then(function (values) {
+                    var data = values[0]
+                    var App = window.FreeLogApp
+                    if (App.isValidResponse(data)){
+                        return data
+                    } else {
+                        App.trigger(App.EventCode.invalidResponse, {
+                            data: data,
+                            callback: function () {
+                                console.log(arguments)
+                                debugger
+                            }
+                        });
+                    }
                 })
             }
 

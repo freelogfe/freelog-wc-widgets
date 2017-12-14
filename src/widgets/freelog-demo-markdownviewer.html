@@ -95,7 +95,6 @@
                 shadowRoot.appendChild(instance)
                 self.loadData()
                     .then(function (markdowns) {
-                        console.log('markdown viewer')
                         self.markdowns = markdowns
                         self.markdownHtmls = []
                         markdowns.forEach(function (md) {
@@ -115,19 +114,34 @@
                 return window.QI.fetch(`/v1/presentables?nodeId=${window.__auth_info__.__auth_node_id__}&resourceType=markdown`).then(function (res) {
                     return res.json()
                 }).then(function (data) {
-                    self.presentableList = data.data;
-                    var promises = data.data.map(function (resource) {
+                    self.presentableList = data.data || [];
+                    var promises = self.presentableList.map(function (resource) {
                         return window.QI.fetchResource(resource.presentableId + '.data')
-                            .then(function (response) {
-                                return response.text()
-                            })
                     });
 
                     return Promise.all(promises)
                 }).then(function (values) {
-                    return values.filter(function (v) {
-                        return v !== null
+                    var result = []
+                    var App = window.FreeLogApp
+
+                    values.forEach(function (res) {
+                        var isError = !res.headers.get('freelog-resource-type')
+                        if (isError) {
+                            res.json().then(function (data) {
+                                App.trigger(App.EventCode.invalidResponse, {
+                                    data: data,
+                                    callback: function () {
+                                        console.log(arguments)
+                                        debugger
+                                    }
+                                });
+                            })
+                        } else {
+                            result.push(res.text())
+                        }
                     })
+
+                    return Promise.all(result)
                 })
             }
 
